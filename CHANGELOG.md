@@ -278,6 +278,14 @@ artifacts change. Read-only inspection and discussion do not create entries.
   allowlist, validates the downloaded split, and will not overwrite an
   existing held-out test file without `--overwrite`.
 
+### Frozen Qwen base-model evaluation
+
+- Extended `scripts/evaluate_sft_ooda.py` so `--adapter` is optional and added
+  `scripts/evaluate_qwen4b_base_sft.sh` for a base-Qwen3-4B-only condition.
+  It uses the identical held-out test file, Qwen chat template, 7,168-token
+  input limit, greedy decoding, and program scorer as the QLoRA condition,
+  while writing to a separate baseline result directory.
+
 ### Immutable scene rendering for SFT
 
 - Updated the SFT renderer to use `ooda-renderer/v2`: program logic now writes

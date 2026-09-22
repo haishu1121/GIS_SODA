@@ -380,6 +380,19 @@ RUN_NAME=qwen3-4b-lora-ooda-v1 bash scripts/evaluate_qwen4b_lora_sft.sh
 The test downloader has an explicit one-file allowlist and will not download
 train, validation, canonical, raw GIS, models, or reviews.
 
+For a like-for-like unmodified Qwen3-4B baseline, use the same test file,
+chat template, context limit, and deterministic decoding, but do not load an
+adapter:
+
+```bash
+bash scripts/evaluate_qwen4b_base_sft.sh
+```
+
+Its outputs are isolated under
+`runs/gis-concept-v1/qwen3-4b-base-ooda/evaluation/test-greedy/`. Compare its
+`report.json` with the adapter run's `report.json`; no test result should be
+used to select another adapter or modify training hyperparameters.
+
 To package the source code and active train/validation data from Windows for
 that server, run:
 

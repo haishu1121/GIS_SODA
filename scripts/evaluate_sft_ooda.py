@@ -69,7 +69,7 @@ def _token_ids(value: Any) -> list[int]:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base-model", required=True, help="Local Qwen3-4B directory or Hugging Face model ID")
-    parser.add_argument("--adapter", required=True, help="Completed LoRA adapter directory (the training output root)")
+    parser.add_argument("--adapter", help="Optional completed LoRA adapter directory; omit for base-model evaluation")
     parser.add_argument("--data", required=True, help="Strictly held-out anonymous_ooda_en test JSONL")
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--max-input-length", type=int, default=7168)
@@ -86,7 +86,6 @@ def main() -> None:
 
     try:
         import torch
-        from peft import PeftModel
         from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
     except ImportError as exc:
         raise SystemExit("Install server dependencies first: bash scripts/setup_lora_server.sh") from exc
@@ -95,15 +94,17 @@ def main() -> None:
     if args.bf16 and not torch.cuda.is_bf16_supported():
         parser.error("--bf16 requires a CUDA GPU with bfloat16 support")
 
-    data_path, adapter_path, output_dir = Path(args.data), Path(args.adapter), Path(args.output_dir)
+    data_path = Path(args.data)
+    adapter_path = Path(args.adapter) if args.adapter else None
+    output_dir = Path(args.output_dir)
     if not data_path.is_file():
         parser.error(f"held-out test JSONL not found: {data_path}")
-    if not (adapter_path / "adapter_config.json").is_file():
+    if adapter_path is not None and not (adapter_path / "adapter_config.json").is_file():
         parser.error(f"LoRA adapter_config.json not found under: {adapter_path}")
     records = _read_test_records(data_path, args.limit)
     _prepare_output(output_dir, args.overwrite)
 
-    tokenizer_source = adapter_path if (adapter_path / "tokenizer_config.json").is_file() else args.base_model
+    tokenizer_source = adapter_path if adapter_path is not None and (adapter_path / "tokenizer_config.json").is_file() else args.base_model
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_source, trust_remote_code=False)
     tokenizer.pad_token = tokenizer.pad_token or tokenizer.eos_token
     tokenizer.padding_side = "left"
@@ -119,7 +120,14 @@ def main() -> None:
     elif args.bf16:
         model_kwargs["dtype"] = torch.bfloat16
     base = AutoModelForCausalLM.from_pretrained(args.base_model, trust_remote_code=False, **model_kwargs)
-    model = PeftModel.from_pretrained(base, adapter_path)
+    if adapter_path is not None:
+        try:
+            from peft import PeftModel
+        except ImportError as exc:
+            raise SystemExit("Install server dependencies first: bash scripts/setup_lora_server.sh") from exc
+        model = PeftModel.from_pretrained(base, adapter_path)
+    else:
+        model = base
     model.eval()
 
     predictions_path = output_dir / "predictions.jsonl"
@@ -160,7 +168,8 @@ def main() -> None:
         "schema_version": "gis-concept-sft-evaluation/v1",
         "created_at_utc": datetime.now(UTC).isoformat(),
         "base_model": args.base_model,
-        "adapter": str(adapter_path),
+        "condition": "lora_adapter" if args.adapter else "base_model",
+        "adapter": str(adapter_path) if adapter_path is not None else None,
         "data": str(data_path),
         "decoding": {"do_sample": False, "max_new_tokens": args.max_new_tokens},
         "input": {"max_input_length": args.max_input_length, "qlora_4bit": args.qlora_4bit, "bf16": args.bf16},
