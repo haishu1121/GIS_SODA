@@ -232,6 +232,11 @@ artifacts change. Read-only inspection and discussion do not create entries.
   token-for-token equal to the full template header. The SFT loader now treats
   a prefix as a completion boundary only when the full template has additional
   tokens, otherwise it uses exact assistant-content localization.
+- Replaced completed-assistant chat-template parsing with direct causal-SFT
+  construction: native user-to-assistant generation prompt + verified
+  assistant OODA tokens + EOS. This removes dependence on Qwen3's
+  version-dependent hidden assistant control tokens while retaining strict
+  assistant-only loss masking.
 
 ### Immutable scene rendering for SFT
 

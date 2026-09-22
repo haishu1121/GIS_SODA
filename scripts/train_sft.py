@@ -21,14 +21,6 @@ class MessageExample:
     labels: list[int]
 
 
-def _find_subsequence(sequence: list[int], target: list[int]) -> list[int]:
-    """Return every exact occurrence of ``target`` in ``sequence``."""
-    if not target or len(target) > len(sequence):
-        return []
-    width = len(target)
-    return [index for index in range(len(sequence) - width + 1) if sequence[index:index + width] == target]
-
-
 def _read_messages_jsonl(path: str | Path, *, expected_trace_style: str, tokenizer: Any, max_length: int) -> list[MessageExample]:
     """Read the active SFT contract and fail rather than silently truncate."""
     rows: list[MessageExample] = []
@@ -58,32 +50,22 @@ def _read_messages_jsonl(path: str | Path, *, expected_trace_style: str, tokeniz
 
         # This user-only prefix includes the native assistant-generation marker.
         # Qwen3 otherwise enables its optional ``<think>`` generation prefix.
-        # This dataset supervises explicit OODA directly, so disable that mode
-        # for both sides of the assistant-boundary calculation. Tokenizers that
-        # do not use this Jinja variable simply ignore it.
+        # This dataset supervises explicit OODA directly, so disable that mode.
+        #
+        # Do not format the completed assistant message through the chat
+        # template again. Qwen3 has version-dependent hidden control tokens in
+        # that path, so its apparent assistant-text boundary is not stable.
+        # Concatenating the native generation prompt, verified assistant
+        # content, and EOS is standard causal-SFT construction and gives an
+        # unambiguous assistant-only loss mask.
         template_options = {"tokenize": True, "enable_thinking": False}
         prompt_ids = list(tokenizer.apply_chat_template(messages[:1], add_generation_prompt=True, **template_options))
-        full_ids = list(tokenizer.apply_chat_template(messages, add_generation_prompt=False, **template_options))
-        # A matching prefix is a valid boundary only when the full conversation
-        # actually contains additional assistant-completion tokens. Some Qwen3
-        # templates render a user-only generation prompt that is token-for-token
-        # equal to the full template header; treating equality as a completion
-        # would mask the whole sample.
-        if len(prompt_ids) < len(full_ids) and full_ids[:len(prompt_ids)] == prompt_ids:
-            assistant_start = len(prompt_ids)
-        else:
-            # Qwen3 can render a different generation-control prefix in a
-            # user-only prompt than it renders before an explicit assistant
-            # message. Locate the exact assistant content in the full native
-            # template instead of rejecting a valid dataset record.
-            assistant_content_ids = tokenizer(messages[1]["content"], add_special_tokens=False)["input_ids"]
-            occurrences = _find_subsequence(full_ids, assistant_content_ids)
-            if len(occurrences) != 1:
-                raise ValueError(
-                    f"cannot locate one assistant completion in chat template at {path}:{line_no}; "
-                    f"found {len(occurrences)} candidate boundaries"
-                )
-            assistant_start = occurrences[0]
+        assistant_content_ids = list(tokenizer(messages[1]["content"], add_special_tokens=False)["input_ids"])
+        eos_token_id = tokenizer.eos_token_id
+        if eos_token_id is None:
+            raise ValueError("tokenizer must define eos_token_id for causal SFT")
+        full_ids = prompt_ids + assistant_content_ids + [eos_token_id]
+        assistant_start = len(prompt_ids)
         if len(full_ids) > max_length:
             raise ValueError(
                 f"record exceeds max_length={max_length} at {path}:{line_no} ({len(full_ids)} tokens); "

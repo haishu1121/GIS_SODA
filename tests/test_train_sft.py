@@ -35,16 +35,7 @@ class _QwenStyleTokenizer:
         assert add_special_tokens is False
         return {"input_ids": [ord(char) for char in text]}
 
-
-class _EqualPrefixTokenizer(_QwenStyleTokenizer):
-    """Represents a template whose prompt header equals the full header."""
-
-    def apply_chat_template(self, messages, *, tokenize, add_generation_prompt, enable_thinking):
-        assert tokenize is True and enable_thinking is False
-        if add_generation_prompt:
-            return [701]
-        assistant_ids = [ord(char) for char in messages[1]["content"]]
-        return [701] + assistant_ids
+    eos_token_id = 703
 
 
 class TrainSFTTests(unittest.TestCase):
@@ -69,7 +60,7 @@ class TrainSFTTests(unittest.TestCase):
         self.assertEqual(rows[0].labels[:13], [-100] * 13)
         self.assertEqual(rows[0].labels[13:], [ord(char) for char in "Observe:\nVerified."] + [703])
 
-    def test_does_not_treat_equal_template_header_as_completion(self) -> None:
+    def test_uses_native_prompt_and_direct_assistant_content(self) -> None:
         module = _load_train_sft_module()
         record = {
             "scenario_id": "scenario-2",
@@ -84,9 +75,10 @@ class TrainSFTTests(unittest.TestCase):
             path = Path(directory) / "train.jsonl"
             path.write_text(json.dumps(record) + "\n", encoding="utf-8")
             rows = module._read_messages_jsonl(
-                path, expected_trace_style="ooda", tokenizer=_EqualPrefixTokenizer(), max_length=128,
+                path, expected_trace_style="ooda", tokenizer=_QwenStyleTokenizer(), max_length=128,
             )
-        self.assertEqual(rows[0].labels, [-100] + [ord(char) for char in "Observe"])
+        self.assertEqual(rows[0].input_ids[:13], [100] + [ord(char) for char in "Fixed scene"] + [701])
+        self.assertEqual(rows[0].labels, [-100] * 13 + [ord(char) for char in "Observe"] + [703])
 
 
 if __name__ == "__main__":
