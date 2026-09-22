@@ -11,7 +11,7 @@ import argparse
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 
 @dataclass(frozen=True)
@@ -19,6 +19,21 @@ class MessageExample:
     scenario_id: str
     input_ids: list[int]
     labels: list[int]
+
+
+def _token_ids(value: Any) -> list[int]:
+    """Normalize tokenizer outputs across Transformers return conventions."""
+    if isinstance(value, Mapping):
+        value = value.get("input_ids")
+    if hasattr(value, "tolist"):
+        value = value.tolist()
+    if isinstance(value, tuple):
+        value = list(value)
+    if isinstance(value, list) and len(value) == 1 and isinstance(value[0], (list, tuple)):
+        value = list(value[0])
+    if not isinstance(value, list) or not all(isinstance(token, int) for token in value):
+        raise TypeError("tokenizer must return one flat integer input_ids sequence")
+    return value
 
 
 def _read_messages_jsonl(path: str | Path, *, expected_trace_style: str, tokenizer: Any, max_length: int) -> list[MessageExample]:
@@ -59,8 +74,8 @@ def _read_messages_jsonl(path: str | Path, *, expected_trace_style: str, tokeniz
         # content, and EOS is standard causal-SFT construction and gives an
         # unambiguous assistant-only loss mask.
         template_options = {"tokenize": True, "enable_thinking": False}
-        prompt_ids = list(tokenizer.apply_chat_template(messages[:1], add_generation_prompt=True, **template_options))
-        assistant_content_ids = list(tokenizer(messages[1]["content"], add_special_tokens=False)["input_ids"])
+        prompt_ids = _token_ids(tokenizer.apply_chat_template(messages[:1], add_generation_prompt=True, **template_options))
+        assistant_content_ids = _token_ids(tokenizer(messages[1]["content"], add_special_tokens=False))
         eos_token_id = tokenizer.eos_token_id
         if eos_token_id is None:
             raise ValueError("tokenizer must define eos_token_id for causal SFT")

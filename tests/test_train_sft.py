@@ -38,6 +38,15 @@ class _QwenStyleTokenizer:
     eos_token_id = 703
 
 
+class _WrappedTemplateTokenizer(_QwenStyleTokenizer):
+    """Represents newer Transformers returning a mapping from chat templates."""
+
+    def apply_chat_template(self, messages, *, tokenize, add_generation_prompt, enable_thinking):
+        return {"input_ids": super().apply_chat_template(
+            messages, tokenize=tokenize, add_generation_prompt=add_generation_prompt, enable_thinking=enable_thinking,
+        )}
+
+
 class TrainSFTTests(unittest.TestCase):
     def test_masks_qwen_style_different_assistant_prefix(self) -> None:
         module = _load_train_sft_module()
@@ -79,6 +88,25 @@ class TrainSFTTests(unittest.TestCase):
             )
         self.assertEqual(rows[0].input_ids[:13], [100] + [ord(char) for char in "Fixed scene"] + [701])
         self.assertEqual(rows[0].labels, [-100] * 13 + [ord(char) for char in "Observe"] + [703])
+
+    def test_accepts_mapping_returned_by_newer_chat_template(self) -> None:
+        module = _load_train_sft_module()
+        record = {
+            "scenario_id": "scenario-3",
+            "split": "train",
+            "view": {"trace_style": "ooda"},
+            "messages": [
+                {"role": "user", "content": "Scene"},
+                {"role": "assistant", "content": "Act"},
+            ],
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "train.jsonl"
+            path.write_text(json.dumps(record) + "\n", encoding="utf-8")
+            rows = module._read_messages_jsonl(
+                path, expected_trace_style="ooda", tokenizer=_WrappedTemplateTokenizer(), max_length=128,
+            )
+        self.assertTrue(all(isinstance(token, int) for token in rows[0].input_ids))
 
 
 if __name__ == "__main__":

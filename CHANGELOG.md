@@ -237,6 +237,10 @@ artifacts change. Read-only inspection and discussion do not create entries.
   assistant OODA tokens + EOS. This removes dependence on Qwen3's
   version-dependent hidden assistant control tokens while retaining strict
   assistant-only loss masking.
+- Normalized `apply_chat_template` and tokenizer outputs before batching so
+  both list-style and mapping-style Transformers return values become one flat
+  integer token sequence. This fixes the server-side DataLoader error caused
+  by mapping keys being treated as token strings.
 
 ### Immutable scene rendering for SFT
 
