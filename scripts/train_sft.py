@@ -64,7 +64,12 @@ def _read_messages_jsonl(path: str | Path, *, expected_trace_style: str, tokeniz
         template_options = {"tokenize": True, "enable_thinking": False}
         prompt_ids = list(tokenizer.apply_chat_template(messages[:1], add_generation_prompt=True, **template_options))
         full_ids = list(tokenizer.apply_chat_template(messages, add_generation_prompt=False, **template_options))
-        if full_ids[:len(prompt_ids)] == prompt_ids:
+        # A matching prefix is a valid boundary only when the full conversation
+        # actually contains additional assistant-completion tokens. Some Qwen3
+        # templates render a user-only generation prompt that is token-for-token
+        # equal to the full template header; treating equality as a completion
+        # would mask the whole sample.
+        if len(prompt_ids) < len(full_ids) and full_ids[:len(prompt_ids)] == prompt_ids:
             assistant_start = len(prompt_ids)
         else:
             # Qwen3 can render a different generation-control prefix in a

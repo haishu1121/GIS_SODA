@@ -228,6 +228,10 @@ artifacts change. Read-only inspection and discussion do not create entries.
   template and masks only preceding tokens. This preserves assistant-only
   supervision without rejecting valid records. Replaced the deprecated
   `torch_dtype` loading argument with `dtype`.
+- Fixed a Qwen3 equal-header edge case: a user-only generation prompt can be
+  token-for-token equal to the full template header. The SFT loader now treats
+  a prefix as a completion boundary only when the full template has additional
+  tokens, otherwise it uses exact assistant-content localization.
 
 ### Immutable scene rendering for SFT
 

@@ -36,6 +36,17 @@ class _QwenStyleTokenizer:
         return {"input_ids": [ord(char) for char in text]}
 
 
+class _EqualPrefixTokenizer(_QwenStyleTokenizer):
+    """Represents a template whose prompt header equals the full header."""
+
+    def apply_chat_template(self, messages, *, tokenize, add_generation_prompt, enable_thinking):
+        assert tokenize is True and enable_thinking is False
+        if add_generation_prompt:
+            return [701]
+        assistant_ids = [ord(char) for char in messages[1]["content"]]
+        return [701] + assistant_ids
+
+
 class TrainSFTTests(unittest.TestCase):
     def test_masks_qwen_style_different_assistant_prefix(self) -> None:
         module = _load_train_sft_module()
@@ -57,6 +68,25 @@ class TrainSFTTests(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0].labels[:13], [-100] * 13)
         self.assertEqual(rows[0].labels[13:], [ord(char) for char in "Observe:\nVerified."] + [703])
+
+    def test_does_not_treat_equal_template_header_as_completion(self) -> None:
+        module = _load_train_sft_module()
+        record = {
+            "scenario_id": "scenario-2",
+            "split": "train",
+            "view": {"trace_style": "ooda"},
+            "messages": [
+                {"role": "user", "content": "Fixed scene"},
+                {"role": "assistant", "content": "Observe"},
+            ],
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "train.jsonl"
+            path.write_text(json.dumps(record) + "\n", encoding="utf-8")
+            rows = module._read_messages_jsonl(
+                path, expected_trace_style="ooda", tokenizer=_EqualPrefixTokenizer(), max_length=128,
+            )
+        self.assertEqual(rows[0].labels, [-100] + [ord(char) for char in "Observe"])
 
 
 if __name__ == "__main__":
