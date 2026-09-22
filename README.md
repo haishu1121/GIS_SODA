@@ -340,6 +340,24 @@ that server, run:
 The generated ZIP excludes raw GIS, canonical data, test data, checkpoints,
 virtual environments, and local credential files.
 
+### Upload the active OODA data to Hugging Face
+
+Code and SFT data are intentionally separate. The uploader reads the active
+OODA train/validation files directly from this project, validates their split
+and trace-style contract, and uploads only those files, the export manifest,
+and an English Dataset Card. It never selects the test split, raw GIS,
+normalized maps, canonical scenarios, local configuration, or model files.
+
+```powershell
+$env:HF_TOKEN = "<write-token>"
+python -m pip install -e ".[hub]"
+python scripts\upload_hf_ooda_dataset.py --repo-id haishu1121/GIS_SODA_OODA --private
+```
+
+Use `--dry-run` to validate the files without accessing Hugging Face. The
+script also supports cached credentials created with `hf auth login`; never
+commit an access token to the repository.
+
 训练流程与研究方案、论文公开描述对应：
 
 1. **SFT**：学习空间概念和完整 OODA 输出格式。

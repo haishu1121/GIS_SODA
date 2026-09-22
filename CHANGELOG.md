@@ -209,6 +209,13 @@ artifacts change. Read-only inspection and discussion do not create entries.
   the separately cloned CityGPT reference repository, local logs, results,
   temporary render artifacts, and reference-paper PDFs. Source, scripts,
   configurations, tests, and non-secret example configurations remain tracked.
+- Added `scripts/upload_hf_ooda_dataset.py` for direct Hugging Face Dataset
+  upload from the active local SFT directory. It validates and uploads only
+  anonymous OODA train/validation JSONL, the export manifest, and a generated
+  English Dataset Card; test, GIS source layers, canonical records, reviews,
+  models, and credentials are excluded by construction.
+- Added the optional `hub` dependency group and documented private Dataset
+  upload, token handling, and dry-run validation in `README.md`.
 
 ### Immutable scene rendering for SFT
 
