@@ -21,6 +21,14 @@ class MessageExample:
     labels: list[int]
 
 
+def _find_subsequence(sequence: list[int], target: list[int]) -> list[int]:
+    """Return every exact occurrence of ``target`` in ``sequence``."""
+    if not target or len(target) > len(sequence):
+        return []
+    width = len(target)
+    return [index for index in range(len(sequence) - width + 1) if sequence[index:index + width] == target]
+
+
 def _read_messages_jsonl(path: str | Path, *, expected_trace_style: str, tokenizer: Any, max_length: int) -> list[MessageExample]:
     """Read the active SFT contract and fail rather than silently truncate."""
     rows: list[MessageExample] = []
@@ -54,16 +62,29 @@ def _read_messages_jsonl(path: str | Path, *, expected_trace_style: str, tokeniz
         # for both sides of the assistant-boundary calculation. Tokenizers that
         # do not use this Jinja variable simply ignore it.
         template_options = {"tokenize": True, "enable_thinking": False}
-        prompt_ids = tokenizer.apply_chat_template(messages[:1], add_generation_prompt=True, **template_options)
-        full_ids = tokenizer.apply_chat_template(messages, add_generation_prompt=False, **template_options)
-        if full_ids[:len(prompt_ids)] != prompt_ids:
-            raise ValueError(f"chat template has no stable assistant boundary at {path}:{line_no}")
+        prompt_ids = list(tokenizer.apply_chat_template(messages[:1], add_generation_prompt=True, **template_options))
+        full_ids = list(tokenizer.apply_chat_template(messages, add_generation_prompt=False, **template_options))
+        if full_ids[:len(prompt_ids)] == prompt_ids:
+            assistant_start = len(prompt_ids)
+        else:
+            # Qwen3 can render a different generation-control prefix in a
+            # user-only prompt than it renders before an explicit assistant
+            # message. Locate the exact assistant content in the full native
+            # template instead of rejecting a valid dataset record.
+            assistant_content_ids = tokenizer(messages[1]["content"], add_special_tokens=False)["input_ids"]
+            occurrences = _find_subsequence(full_ids, assistant_content_ids)
+            if len(occurrences) != 1:
+                raise ValueError(
+                    f"cannot locate one assistant completion in chat template at {path}:{line_no}; "
+                    f"found {len(occurrences)} candidate boundaries"
+                )
+            assistant_start = occurrences[0]
         if len(full_ids) > max_length:
             raise ValueError(
                 f"record exceeds max_length={max_length} at {path}:{line_no} ({len(full_ids)} tokens); "
                 "increase --max-length rather than dropping GIS facts"
             )
-        labels = [-100] * len(prompt_ids) + full_ids[len(prompt_ids):]
+        labels = [-100] * assistant_start + full_ids[assistant_start:]
         if all(label == -100 for label in labels):
             raise ValueError(f"assistant completion is empty after chat templating at {path}:{line_no}")
         scenario_ids.add(scenario_id)
@@ -177,7 +198,7 @@ def main() -> None:
     tokenizer = AutoTokenizer.from_pretrained(args.model, trust_remote_code=False)
     tokenizer.pad_token = tokenizer.pad_token or tokenizer.eos_token
     tokenizer.padding_side = "right"
-    model_kwargs: dict[str, Any] = {"torch_dtype": torch.bfloat16} if args.bf16 else {}
+    model_kwargs: dict[str, Any] = {"dtype": torch.bfloat16} if args.bf16 else {}
     model = AutoModelForCausalLM.from_pretrained(args.model, trust_remote_code=False, **model_kwargs)
     if args.gradient_checkpointing:
         model.config.use_cache = False

@@ -222,6 +222,12 @@ artifacts change. Read-only inspection and discussion do not create entries.
   download, and its explicit allowlist excludes the withheld test split.
 - Updated the Qwen LoRA runner to direct a missing-data failure to the new
   Hugging Face downloader and documented the server-side data step.
+- Updated messages-SFT loss masking for Qwen3 chat templates. When the
+  user-only generation prefix differs from the full user/assistant template,
+  the trainer now locates the exact assistant OODA token sequence in the full
+  template and masks only preceding tokens. This preserves assistant-only
+  supervision without rejecting valid records. Replaced the deprecated
+  `torch_dtype` loading argument with `dtype`.
 
 ### Immutable scene rendering for SFT
 
