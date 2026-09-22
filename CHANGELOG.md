@@ -252,6 +252,21 @@ artifacts change. Read-only inspection and discussion do not create entries.
   expandable CUDA allocator segments and saves/evaluates every 25 steps so
   recoverable checkpoints exist before later long-geometry batches.
 
+### Held-out Qwen OODA evaluation
+
+- Added `scripts/evaluate_sft_ooda.py` and the Linux wrapper
+  `scripts/evaluate_qwen4b_lora_sft.sh` for deterministic (`do_sample=False`)
+  evaluation of a completed Qwen3-4B QLoRA adapter on the strictly held-out
+  OODA test JSONL.
+- Added program scoring for final JSON Act exactness, OODA heading/final-Act
+  validity, task-balanced and per-task summaries, plus shortest-path edge
+  legality, stated-cost consistency, and optimality checks against the fixed
+  rendered graph.
+- The evaluator writes a compact report, per-scenario JSONL predictions, and
+  a readable error package beneath the training run without reading train or
+  validation data. Added regression tests for Act parsing, OODA structure,
+  graph-path verification, and aggregate metrics.
+
 ### Immutable scene rendering for SFT
 
 - Updated the SFT renderer to use `ooda-renderer/v2`: program logic now writes

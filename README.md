@@ -331,6 +331,33 @@ compatible local path or Hugging Face model ID:
 MODEL_ID=/models/Qwen3-4B RUN_NAME=qwen3-4b-lora-seed42 bash scripts/run_qwen4b_lora_sft.sh
 ```
 
+### Held-out OODA evaluation
+
+Do not select a model by test loss or run test evaluation during training. Once
+the run is complete, the training output root contains the LoRA adapter loaded
+from the lowest-validation-loss checkpoint. Transfer the privately retained
+test JSONL to the server (the Hugging Face training-data downloader explicitly
+does not include it), then run deterministic greedy evaluation:
+
+```bash
+RUN_NAME=qwen3-4b-lora-ooda-v1 bash scripts/evaluate_qwen4b_lora_sft.sh
+```
+
+The evaluator reads only `llm_augmented/test/anonymous_ooda_en.jsonl`, loads
+the Qwen base plus the completed adapter, and writes results under
+`runs/gis-concept-v1/<RUN_NAME>/evaluation/test-greedy/`:
+
+- `report.json`: overall, task-balanced, and per-task metrics;
+- `predictions.jsonl`: one generated completion and program-scoring record per
+  test scenario;
+- `errors.json`: readable records whose final Act is not exact.
+
+It uses `do_sample=False`, requires visible `Observe → Orient → Decide → Act`,
+parses only a final JSON Act, compares it to the stored program gold answer,
+and additionally checks shortest-path legality, stated-cost consistency, and
+optimality against the immutable rendered graph. The test file is never passed
+to the SFT runner.
+
 To package the source code and active train/validation data from Windows for
 that server, run:
 
