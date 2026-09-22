@@ -216,6 +216,12 @@ artifacts change. Read-only inspection and discussion do not create entries.
   models, and credentials are excluded by construction.
 - Added the optional `hub` dependency group and documented private Dataset
   upload, token handling, and dry-run validation in `README.md`.
+- Added `scripts/download_hf_ooda_dataset.py` for server-side retrieval of
+  only the active Hugging Face OODA train/validation files, manifest, and
+  Dataset Card. It validates split, OODA trace style, and scenario IDs after
+  download, and its explicit allowlist excludes the withheld test split.
+- Updated the Qwen LoRA runner to direct a missing-data failure to the new
+  Hugging Face downloader and documented the server-side data step.
 
 ### Immutable scene rendering for SFT
 

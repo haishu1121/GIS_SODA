@@ -32,6 +32,7 @@ for required_file in \
   "${DATA_ROOT}/validation/anonymous_ooda_en.jsonl"; do
   if [[ ! -f "${required_file}" ]]; then
     echo "ERROR: missing required dataset: ${required_file}" >&2
+    echo "Download it first: ${PYTHON_BIN} scripts/download_hf_ooda_dataset.py" >&2
     exit 1
   fi
 done

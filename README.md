@@ -358,6 +358,19 @@ Use `--dry-run` to validate the files without accessing Hugging Face. The
 script also supports cached credentials created with `hf auth login`; never
 commit an access token to the repository.
 
+On the GPU server, after cloning the code and creating the environment,
+download only the active OODA train/validation files into the path used by the
+LoRA runner:
+
+```bash
+.venv/bin/python scripts/download_hf_ooda_dataset.py --dry-run
+.venv/bin/python scripts/download_hf_ooda_dataset.py
+```
+
+For a private Dataset repository, authenticate on the server with `hf auth
+login` first, or provide a read token through `HF_TOKEN`. This downloader has
+an explicit allowlist and cannot download the withheld test split.
+
 训练流程与研究方案、论文公开描述对应：
 
 1. **SFT**：学习空间概念和完整 OODA 输出格式。
