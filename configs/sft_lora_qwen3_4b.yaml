@@ -6,7 +6,7 @@ trace_style: ooda
 train_data: data/sft/gis-concept-v1/llm_augmented/train/anonymous_ooda_en.jsonl
 validation_data: data/sft/gis-concept-v1/llm_augmented/validation/anonymous_ooda_en.jsonl
 # The test split is intentionally absent. Use it only after checkpoint selection.
-max_length: 4096
+max_length: 7168
 epochs: 3
 learning_rate: 2.0e-5
 per_device_train_batch_size: 1

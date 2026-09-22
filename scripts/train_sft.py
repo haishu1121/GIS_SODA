@@ -157,7 +157,7 @@ def main() -> None:
     parser.add_argument("--output", required=True)
     parser.add_argument("--epochs", type=float, default=3, help="Paper baseline setting")
     parser.add_argument("--learning-rate", type=float, default=2e-5)
-    parser.add_argument("--max-length", type=int, default=4096)
+    parser.add_argument("--max-length", type=int, default=7168)
     parser.add_argument("--schema", choices=["concept", "spod", "messages"], default="concept")
     parser.add_argument("--trace-style", choices=["qa", "minimal", "ooda"], default="ooda")
     parser.add_argument("--per-device-train-batch-size", type=int, default=1)

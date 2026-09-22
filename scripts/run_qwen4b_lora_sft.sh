@@ -16,6 +16,7 @@ fi
 DATA_ROOT="${DATA_ROOT:-${ROOT_DIR}/data/sft/gis-concept-v1/llm_augmented}"
 RUN_NAME="${RUN_NAME:-qwen3-4b-lora-ooda-v1}"
 OUTPUT_DIR="${OUTPUT_DIR:-${ROOT_DIR}/runs/gis-concept-v1/${RUN_NAME}}"
+MAX_LENGTH="${MAX_LENGTH:-7168}"
 
 if [[ ! -x "${PYTHON_BIN}" ]]; then
   echo "ERROR: server environment is missing. Run: bash scripts/setup_lora_server.sh" >&2
@@ -47,7 +48,7 @@ cd "${ROOT_DIR}"
   --output "${OUTPUT_DIR}" \
   --epochs 3 \
   --learning-rate 2e-5 \
-  --max-length 4096 \
+  --max-length "${MAX_LENGTH}" \
   --per-device-train-batch-size 1 \
   --per-device-eval-batch-size 1 \
   --gradient-accumulation-steps 16 \

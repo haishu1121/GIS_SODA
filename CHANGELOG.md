@@ -241,6 +241,11 @@ artifacts change. Read-only inspection and discussion do not create entries.
   both list-style and mapping-style Transformers return values become one flat
   integer token sequence. This fixes the server-side DataLoader error caused
   by mapping keys being treated as token strings.
+- Measured the active Qwen3 token lengths on the training server: train max
+  6,579 and validation max 6,149 tokens, both from Topology geometry cases.
+  Raised the Qwen3 LoRA default context length from 4,096 to 7,168 tokens to
+  preserve complete GIS facts with headroom, while retaining batch-size-one
+  dynamic padding for ordinary shorter samples.
 
 ### Immutable scene rendering for SFT
 
