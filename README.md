@@ -320,7 +320,8 @@ with no model download. If a Hugging Face endpoint mirror is required, set
 environment variable such as `HF_TOKEN` only when the selected model requires
 authentication.
 
-The runner uses the model's chat template, masks the user message from loss,
+The runner uses QLoRA by default: the frozen Qwen base is loaded in 4-bit NF4
+while LoRA adapters train in BF16. It uses the model's chat template, masks the user message from loss,
 supervises only the assistant OODA completion, validates train/validation
 `scenario_id` disjointness, and saves a `training_manifest.json` beside the
 LoRA adapter. Its default model is `Qwen/Qwen3-4B`; override it only with a

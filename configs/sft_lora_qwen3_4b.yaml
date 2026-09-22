@@ -1,6 +1,6 @@
 # Server LoRA pilot configuration for the verified GIS Concept OODA dataset.
 model: Qwen/Qwen3-4B
-method: lora
+method: qlora_4bit
 precision: bf16
 trace_style: ooda
 train_data: data/sft/gis-concept-v1/llm_augmented/train/anonymous_ooda_en.jsonl
@@ -20,7 +20,7 @@ lora:
   target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
 checkpoint_selection:
   metric: eval_loss
-  save_steps: 100
-  eval_steps: 100
+  save_steps: 25
+  eval_steps: 25
   save_total_limit: 2
 seed: 42

@@ -17,6 +17,11 @@ DATA_ROOT="${DATA_ROOT:-${ROOT_DIR}/data/sft/gis-concept-v1/llm_augmented}"
 RUN_NAME="${RUN_NAME:-qwen3-4b-lora-ooda-v1}"
 OUTPUT_DIR="${OUTPUT_DIR:-${ROOT_DIR}/runs/gis-concept-v1/${RUN_NAME}}"
 MAX_LENGTH="${MAX_LENGTH:-7168}"
+SAVE_STEPS="${SAVE_STEPS:-25}"
+EVAL_STEPS="${EVAL_STEPS:-25}"
+
+# Reduces allocator fragmentation during occasional long-geometry batches.
+export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
 
 if [[ ! -x "${PYTHON_BIN}" ]]; then
   echo "ERROR: server environment is missing. Run: bash scripts/setup_lora_server.sh" >&2
@@ -56,10 +61,11 @@ cd "${ROOT_DIR}"
   --bf16 \
   --tf32 \
   --lora \
+  --qlora-4bit \
   --lora-rank 16 \
   --lora-alpha 32 \
   --lora-dropout 0.05 \
-  --eval-steps 100 \
-  --save-steps 100 \
+  --eval-steps "${EVAL_STEPS}" \
+  --save-steps "${SAVE_STEPS}" \
   --save-total-limit 2 \
   --seed 42

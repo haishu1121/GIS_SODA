@@ -246,6 +246,11 @@ artifacts change. Read-only inspection and discussion do not create entries.
   Raised the Qwen3 LoRA default context length from 4,096 to 7,168 tokens to
   preserve complete GIS facts with headroom, while retaining batch-size-one
   dynamic padding for ordinary shorter samples.
+- After a 24 GB RTX 4090 out-of-memory error on a long Topology sample,
+  changed the Qwen3 default from BF16-base LoRA to 4-bit NF4 QLoRA with BF16
+  adapter computation and double quantization. The runner now enables
+  expandable CUDA allocator segments and saves/evaluates every 25 steps so
+  recoverable checkpoints exist before later long-geometry batches.
 
 ### Immutable scene rendering for SFT
 

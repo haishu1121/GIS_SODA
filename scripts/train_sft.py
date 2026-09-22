@@ -127,6 +127,7 @@ def _write_run_manifest(output: str | Path, args: argparse.Namespace, *, train_c
         "validation_examples": validation_count,
         "lora": {
             "enabled": args.lora,
+            "qlora_4bit": args.qlora_4bit,
             "rank": args.lora_rank if args.lora else None,
             "alpha": args.lora_alpha if args.lora else None,
             "dropout": args.lora_dropout if args.lora else None,
@@ -172,6 +173,7 @@ def main() -> None:
     parser.add_argument("--tf32", action="store_true", help="Enable TensorFloat-32 matmul")
     parser.add_argument("--gradient-checkpointing", action="store_true")
     parser.add_argument("--lora", action="store_true", help="Train PEFT LoRA adapters, not all model weights")
+    parser.add_argument("--qlora-4bit", action="store_true", help="Load the frozen base model in 4-bit NF4 for LoRA training")
     parser.add_argument("--lora-rank", type=int, default=16)
     parser.add_argument("--lora-alpha", type=int, default=32)
     parser.add_argument("--lora-dropout", type=float, default=0.05)
@@ -184,11 +186,17 @@ def main() -> None:
         parser.error("--validation-data is required for --schema messages")
     if args.lora and (args.lora_rank < 1 or args.lora_alpha < 1):
         parser.error("LoRA rank and alpha must be positive")
+    if args.qlora_4bit and not args.lora:
+        parser.error("--qlora-4bit requires --lora")
     try:
         import torch
         from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments, set_seed
+        if args.qlora_4bit:
+            from transformers import BitsAndBytesConfig
         if args.lora:
             from peft import LoraConfig, TaskType, get_peft_model
+            if args.qlora_4bit:
+                from peft import prepare_model_for_kbit_training
     except ImportError as exc:
         raise SystemExit("Install server training dependencies with: bash scripts/setup_lora_server.sh") from exc
 
@@ -200,9 +208,23 @@ def main() -> None:
     tokenizer = AutoTokenizer.from_pretrained(args.model, trust_remote_code=False)
     tokenizer.pad_token = tokenizer.pad_token or tokenizer.eos_token
     tokenizer.padding_side = "right"
-    model_kwargs: dict[str, Any] = {"dtype": torch.bfloat16} if args.bf16 else {}
+    model_kwargs: dict[str, Any] = {}
+    if args.qlora_4bit:
+        model_kwargs["quantization_config"] = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_compute_dtype=torch.bfloat16 if args.bf16 else torch.float16,
+        )
+        # QLoRA quantized modules must be placed directly on the one training GPU.
+        model_kwargs["device_map"] = {"": 0}
+    elif args.bf16:
+        model_kwargs["dtype"] = torch.bfloat16
     model = AutoModelForCausalLM.from_pretrained(args.model, trust_remote_code=False, **model_kwargs)
-    if args.gradient_checkpointing:
+    if args.qlora_4bit:
+        model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=args.gradient_checkpointing)
+        model.config.use_cache = False
+    elif args.gradient_checkpointing:
         model.config.use_cache = False
         model.gradient_checkpointing_enable()
         model.enable_input_require_grads()
