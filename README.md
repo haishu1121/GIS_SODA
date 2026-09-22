@@ -358,6 +358,28 @@ and additionally checks shortest-path legality, stated-cost consistency, and
 optimality against the immutable rendered graph. The test file is never passed
 to the SFT runner.
 
+To transfer that held-out file through Hugging Face, use a separate **private**
+Dataset repository; never add it to `haishu1121/GIS_SODA_OODA`. The dedicated
+uploader permits only the test OODA JSONL and refuses the training repository:
+
+```powershell
+python -m pip install -e ".[hub]"
+python scripts\upload_hf_ooda_test.py `
+  --repo-id haishu1121/GIS_SODA_OODA_TEST_PRIVATE
+```
+
+After authenticating on the server with `hf auth login` (or setting a read
+`HF_TOKEN`), retrieve only that private test file and then evaluate:
+
+```bash
+.venv/bin/python scripts/download_hf_ooda_test.py \
+  --repo-id haishu1121/GIS_SODA_OODA_TEST_PRIVATE
+RUN_NAME=qwen3-4b-lora-ooda-v1 bash scripts/evaluate_qwen4b_lora_sft.sh
+```
+
+The test downloader has an explicit one-file allowlist and will not download
+train, validation, canonical, raw GIS, models, or reviews.
+
 To package the source code and active train/validation data from Windows for
 that server, run:
 

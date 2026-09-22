@@ -267,6 +267,17 @@ artifacts change. Read-only inspection and discussion do not create entries.
   validation data. Added regression tests for Act parsing, OODA structure,
   graph-path verification, and aggregate metrics.
 
+### Private Hugging Face held-out test transfer
+
+- Added `scripts/upload_hf_ooda_test.py` and
+  `scripts/download_hf_ooda_test.py` for a separate private Hugging Face
+  Dataset repository containing only `test/anonymous_ooda_en.jsonl`.
+- The uploader refuses the active train/validation repository, validates that
+  every source record is a test OODA scenario, and refuses upload unless the
+  target repository is confirmed private. The downloader has a one-file
+  allowlist, validates the downloaded split, and will not overwrite an
+  existing held-out test file without `--overwrite`.
+
 ### Immutable scene rendering for SFT
 
 - Updated the SFT renderer to use `ooda-renderer/v2`: program logic now writes
