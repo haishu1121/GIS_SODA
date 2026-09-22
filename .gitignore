@@ -1,0 +1,25 @@
+# Local credentials and machine-specific API settings.
+config/*.local.json
+
+# Reproducible artifacts that are too large or machine-specific for source Git.
+.venv/
+.cache/
+models/
+runs/
+dist/
+data/raw/
+data/normalized/
+data/canonical/
+data/sft/
+data/eval/
+CityGPT/
+logs/
+results/
+tmp/
+doc/*.pdf
+*.pbf
+*.gpkg
+*.graphml
+__pycache__/
+.pytest_cache/
+*.egg-info/

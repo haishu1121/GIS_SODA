@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "soda-reproduction"
+version = "0.1.0"
+description = "Traceable reproduction of SODA pure-text spatial reasoning"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+train = ["torch>=2.3", "transformers>=4.45", "accelerate>=0.34", "peft>=0.14", "safetensors>=0.4"]
+gis = ["shapely>=2.0", "pyproj>=3.6", "networkx>=3.2", "osmium>=4.0", "geopandas>=1.0", "pyogrio>=0.9"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

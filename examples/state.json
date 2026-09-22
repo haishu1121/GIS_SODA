@@ -1,0 +1,8 @@
+{
+  "entities": {
+    "forklift-7": {"position": [2, 3], "status": "idle"},
+    "pallet-12": {"position": [2, 4], "status": "waiting"}
+  },
+  "obstacles": [[2, 5], [3, 3]],
+  "goal": {"pallet-12": [8, 10]}
+}

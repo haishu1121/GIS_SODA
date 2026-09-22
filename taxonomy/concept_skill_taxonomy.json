@@ -1,0 +1,21 @@
+{
+  "version": "0.1.0",
+  "scope": "MVP: atomic GIS concepts only; Spatial CoT workflows are evaluation-only.",
+  "concepts": {
+    "Location": {
+      "skills": ["relative_direction", "euclidean_distance"],
+      "task_types": ["direction", "distance"]
+    },
+    "Object": {
+      "skills": ["topology_relation"],
+      "task_types": ["topology"]
+    },
+    "Network": {
+      "skills": ["connectivity", "shortest_path"],
+      "task_types": ["connectivity", "shortest_path"]
+    }
+  },
+  "planned_next": {
+    "Network": ["path_length"]
+  }
+}

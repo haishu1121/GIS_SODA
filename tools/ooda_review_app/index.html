@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GIS Concept — OODA Review</title>
+  <style>
+    :root { color-scheme: dark; --bg:#09131e; --panel:#102231; --panel2:#0d1a27; --line:#274458; --ink:#e8f1f5; --muted:#92a9b8; --cyan:#49d4d0; --amber:#f6bd60; --red:#ef6b73; --green:#69d28f; }
+    * { box-sizing:border-box; } body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 Inter, "Segoe UI", sans-serif; }
+    header { display:flex; align-items:center; gap:18px; padding:18px 28px; border-bottom:1px solid var(--line); background:#0b1925; position:sticky; top:0; z-index:3; }
+    h1 { font-size:1.15rem; margin:0; letter-spacing:.02em; } .badge { font-size:.78rem; color:var(--cyan); border:1px solid #287d80; border-radius:999px; padding:3px 9px; }
+    button, .file-label { font:inherit; color:var(--ink); background:#173248; border:1px solid #37627c; border-radius:7px; padding:8px 12px; cursor:pointer; } button:hover, .file-label:hover { background:#20445c; } button.primary { background:#167b7a; border-color:#27aaa7; } button.primary:hover { background:#20918e; } input[type=file] { display:none; }
+    #app { display:grid; grid-template-columns:300px minmax(0,1fr); min-height:calc(100vh - 69px); } aside { border-right:1px solid var(--line); background:var(--panel2); padding:18px; overflow:auto; }
+    .summary { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px; } .metric { padding:9px; background:var(--panel); border:1px solid var(--line); border-radius:8px; } .metric b { display:block; font-size:1.15rem; } .metric span { color:var(--muted); font-size:.75rem; }
+    #scenario-list { display:grid; gap:6px; } .scenario { width:100%; text-align:left; padding:9px; font-size:.82rem; background:transparent; border-color:transparent; color:var(--muted); } .scenario:hover { border-color:var(--line); } .scenario.active { background:#173248; color:var(--ink); border-color:#3b6984; } .dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:7px; background:#556b7a; } .dot.approved { background:var(--green); }.dot.revise { background:var(--amber); }.dot.exclude { background:var(--red); }
+    main { padding:28px; max-width:1100px; width:100%; margin:0 auto; } #empty { margin-top:14vh; max-width:620px; padding:28px; border:1px dashed #426278; border-radius:12px; background:var(--panel2); } #empty p { color:var(--muted); }
+    #review { display:none; } .meta { display:flex; flex-wrap:wrap; gap:8px; color:var(--muted); font-size:.85rem; margin-bottom:18px; }.meta code { color:#b6e8e5; }
+    .block { background:var(--panel2); border:1px solid var(--line); border-radius:10px; margin:14px 0; overflow:hidden; }.block h2 { font-size:.9rem; margin:0; padding:10px 14px; background:#132a3b; border-bottom:1px solid var(--line); }.block pre { margin:0; padding:16px; white-space:pre-wrap; overflow-wrap:anywhere; font:14px/1.55 ui-monospace, Consolas, monospace; color:#dceaf0; }
+    .review-form { margin-top:24px; padding:18px; border:1px solid #3b6984; border-radius:10px; background:#102535; }.checks { display:grid; gap:10px; margin:14px 0; }.checks label, .decisions label { display:flex; gap:9px; align-items:flex-start; cursor:pointer; }.decisions { display:flex; flex-wrap:wrap; gap:14px; margin:16px 0; }.decisions label { padding:8px 10px; border:1px solid var(--line); border-radius:7px; }
+    textarea { width:100%; min-height:95px; resize:vertical; background:#091722; color:var(--ink); border:1px solid var(--line); border-radius:7px; padding:10px; font:inherit; }.actions { display:flex; gap:9px; justify-content:space-between; margin-top:16px; }.actions span { color:var(--muted); align-self:center; font-size:.85rem; } .hidden { display:none!important; }
+    @media (max-width:780px) { header { padding:14px; flex-wrap:wrap; } #app { grid-template-columns:1fr; } aside { border-right:0; border-bottom:1px solid var(--line); max-height:240px; } main { padding:18px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>GIS Concept · OODA Review</h1><span class="badge">local-only</span>
+    <label class="file-label">Load review JSON<input id="file-input" type="file" accept="application/json,.json"></label>
+    <button id="download" class="primary" disabled>Download labels</button>
+    <button id="clear" disabled>Clear local labels</button>
+  </header>
+  <div id="app">
+    <aside>
+      <div class="summary"><div class="metric"><b id="total">0</b><span>scenarios</span></div><div class="metric"><b id="reviewed">0</b><span>labelled</span></div><div class="metric"><b id="approved">0</b><span>approved</span></div><div class="metric"><b id="rate">—</b><span>approved rate</span></div></div>
+      <div id="scenario-list"></div>
+    </aside>
+    <main>
+      <section id="empty"><h2>Load an OODA review package</h2><p>Select <code>batch-003-deepseek-7500-scenarios.json</code>. The page will only display its OODA view, while keeping your labels in browser-local storage until you download them.</p></section>
+      <section id="review"><div class="meta" id="meta"></div><div class="block"><h2>Question</h2><pre id="question"></pre></div><div class="block"><h2>OODA completion</h2><pre id="ooda"></pre></div><form class="review-form" id="form"><h2>Human review</h2><div class="checks" id="checks"></div><div class="decisions"><label><input type="radio" name="decision" value="approved"> Approved</label><label><input type="radio" name="decision" value="needs_revision"> Needs revision</label><label><input type="radio" name="decision" value="exclude"> Exclude</label></div><label for="notes">Notes</label><textarea id="notes" placeholder="Record a specific issue, ambiguity, or reason for approval."></textarea><div class="actions"><button type="button" id="previous">← Previous</button><span id="position"></span><button type="button" id="next">Next →</button></div></form></section>
+    </main>
+  </div>
+  <script>
+    const checks = [
+      ['answer_correct', 'Answer correct'], ['reasoning_consistent', 'Reasoning consistent with the fixed scene and Act'],
+      ['ooda_order_correct', 'OODA order correct'], ['logic_rigorous', 'Logic rigorous'], ['spatial_state_consistent', 'Spatial state consistent']
+    ];
+    let packageData = null, records = [], index = 0, state = {};
+    const $ = id => document.getElementById(id);
+    const storageKey = () => packageData ? `gis-ooda-review:${packageData.batch_id}` : '';
+    function safeLoad() { try { return JSON.parse(localStorage.getItem(storageKey()) || '{}'); } catch { return {}; } }
+    function save() { if (packageData) localStorage.setItem(storageKey(), JSON.stringify(state)); updateList(); updateMetrics(); }
+    function labelFor(id) { return state[id] || { checks: {}, decision: '', notes: '' }; }
+    function status(label) { return label.decision === 'approved' ? 'approved' : label.decision === 'needs_revision' ? 'revise' : label.decision === 'exclude' ? 'exclude' : ''; }
+    function updateMetrics() { const labels = Object.values(state), reviewed = labels.filter(x => x.decision).length, approved = labels.filter(x => x.decision === 'approved').length; $('total').textContent = records.length; $('reviewed').textContent = reviewed; $('approved').textContent = approved; $('rate').textContent = reviewed ? `${(approved / reviewed * 100).toFixed(1)}%` : '—'; }
+    function updateList() { $('scenario-list').innerHTML = records.map((r, i) => `<button class="scenario ${i===index?'active':''}" data-index="${i}"><span class="dot ${status(labelFor(r.scenario_id))}"></span>${i+1}. ${r.skill}<br><small>${r.scenario_id}</small></button>`).join(''); document.querySelectorAll('.scenario').forEach(b => b.onclick = () => { persistCurrent(); index = Number(b.dataset.index); render(); }); }
+    function render() { const r = records[index], label = labelFor(r.scenario_id); $('empty').classList.add('hidden'); $('review').style.display = 'block'; $('meta').innerHTML = `<span>Scenario: <code>${r.scenario_id}</code></span><span>Skill: <code>${r.skill}</code></span><span>Split: <code>${r.split}</code></span><span>Program Act: <code>${JSON.stringify(r.acts.program)}</code></span>`; $('question').textContent = r.shared_question; $('ooda').textContent = r.views.ooda.assistant; $('checks').innerHTML = checks.map(([key, text]) => `<label><input type="checkbox" data-check="${key}" ${label.checks?.[key] ? 'checked':''}> ${text}</label>`).join(''); document.querySelectorAll('input[name=decision]').forEach(input => input.checked = input.value === label.decision); $('notes').value = label.notes || ''; $('position').textContent = `${index+1} / ${records.length}`; $('previous').disabled = index === 0; $('next').disabled = index === records.length - 1; updateList(); updateMetrics(); }
+    function persistCurrent() { if (!records.length) return; const r = records[index]; const label = { checks: {}, decision: document.querySelector('input[name=decision]:checked')?.value || '', notes: $('notes').value.trim(), updated_at: new Date().toISOString() }; document.querySelectorAll('[data-check]').forEach(input => label.checks[input.dataset.check] = input.checked); state[r.scenario_id] = label; save(); }
+    $('form').addEventListener('change', persistCurrent); $('notes').addEventListener('input', persistCurrent); $('previous').onclick = () => { persistCurrent(); index--; render(); }; $('next').onclick = () => { persistCurrent(); index++; render(); };
+    $('file-input').onchange = async event => { const file = event.target.files[0]; if (!file) return; try { const data = JSON.parse(await file.text()); if (!Array.isArray(data.records)) throw new Error('records missing'); packageData = data; records = data.records.filter(r => r.views?.ooda); if (!records.length) throw new Error('no OODA records'); state = safeLoad(); index = 0; $('download').disabled = false; $('clear').disabled = false; render(); } catch (error) { alert(`Cannot load review JSON: ${error.message}`); } };
+    $('download').onclick = () => { persistCurrent(); const output = { schema_version:'gis-concept-human-review/v1', batch_id:packageData.batch_id, source_review_schema:packageData.schema_version, reviewed_at:new Date().toISOString(), records:records.map(r => ({ scenario_id:r.scenario_id, skill:r.skill, split:r.split, program_act:r.acts.program, ...labelFor(r.scenario_id) })) }; const blob = new Blob([JSON.stringify(output, null, 2)+'\n'], {type:'application/json'}); const link = Object.assign(document.createElement('a'), {href:URL.createObjectURL(blob), download:`${packageData.batch_id}-human-labels.json`}); link.click(); URL.revokeObjectURL(link.href); };
+    $('clear').onclick = () => { if (confirm('Clear locally stored labels for this batch?')) { localStorage.removeItem(storageKey()); state = {}; render(); } };
+  </script>
+</body>
+</html>

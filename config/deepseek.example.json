@@ -1,0 +1,7 @@
+{
+  "api_key": "PASTE_DEEPSEEK_API_KEY_HERE",
+  "model": "deepseek-chat",
+  "endpoint": "https://api.deepseek.com/chat/completions",
+  "timeout_s": 90,
+  "temperature": 0.7
+}

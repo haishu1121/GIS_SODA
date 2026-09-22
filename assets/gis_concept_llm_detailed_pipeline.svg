@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="2180" viewBox="0 0 2400 2180" role="img" aria-labelledby="title desc">
+  <title id="title">GIS Concept LLM Detailed Implementation Pipeline</title>
+  <desc id="desc">从 taxonomy、合成和真实 GIS 数据到训练、验证、OOD 测试和 Spatial CoT 组合评测的详细实现流程</desc>
+  <defs>
+    <style>
+      .bg{fill:#f8fafc}.header{fill:#0f172a}.h1{font:700 46px 'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#fff}.sub{font:22px 'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#cbd5e1}.lane{font:700 25px 'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#fff}.num{font:700 24px Arial,sans-serif;fill:#fff}.t{font:700 24px 'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#0f172a}.b{font:19px 'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#334155}.s{font:16px 'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#475569}.mono{font:16px Consolas,'Microsoft YaHei',sans-serif;fill:#334155}.arrow{fill:none;stroke:#64748b;stroke-width:4;marker-end:url(#ah)}.good{fill:none;stroke:#0f766e;stroke-width:5;marker-end:url(#agh)}.dash{fill:none;stroke:#94a3b8;stroke-width:3;stroke-dasharray:10 8;marker-end:url(#ah)}.note{font:700 17px 'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#9f1239}.pill{font:700 16px 'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#fff}
+    </style>
+    <filter id="sh" x="-8%" y="-10%" width="116%" height="130%"><feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#1e293b" flood-opacity=".13"/></filter>
+    <marker id="ah" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0 0 L12 6 L0 12z" fill="#64748b"/></marker>
+    <marker id="agh" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0 0 L12 6 L0 12z" fill="#0f766e"/></marker>
+  </defs>
+  <rect class="bg" width="2400" height="2180"/>
+  <rect class="header" width="2400" height="120"/>
+  <text class="h1" x="1200" y="54" text-anchor="middle">GIS Concept LLM：详细可执行 Pipeline</text>
+  <text class="sub" x="1200" y="92" text-anchor="middle">训练只覆盖基础概念原子；复杂 Spatial CoT workflow 仅用于训练后组合泛化评测</text>
+
+  <!-- lane backgrounds -->
+  <rect x="35" y="150" width="245" height="1940" rx="24" fill="#0f766e"/>
+  <rect x="305" y="150" width="2050" height="180" rx="24" fill="#ecfeff" stroke="#14b8a6" stroke-width="2"/>
+  <rect x="305" y="360" width="2050" height="720" rx="24" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="305" y="1110" width="2050" height="610" rx="24" fill="#f0fdf4" stroke="#86efac" stroke-width="2"/>
+  <rect x="305" y="1750" width="2050" height="340" rx="24" fill="#fff7ed" stroke="#fdba74" stroke-width="2"/>
+
+  <text class="lane" x="157" y="260" text-anchor="middle">A</text><text class="lane" x="157" y="294" text-anchor="middle">概念定义</text>
+  <text class="lane" x="157" y="595" text-anchor="middle">B</text><text class="lane" x="157" y="629" text-anchor="middle">数据与真值</text>
+  <text class="lane" x="157" y="1245" text-anchor="middle">C</text><text class="lane" x="157" y="1279" text-anchor="middle">训练</text>
+  <text class="lane" x="157" y="1875" text-anchor="middle">D</text><text class="lane" x="157" y="1909" text-anchor="middle">评测</text>
+
+  <!-- A -->
+  <circle cx="360" cy="240" r="27" fill="#0f766e"/><text class="num" x="360" y="249" text-anchor="middle">0</text>
+  <text class="t" x="410" y="230">建立 Concept–Skill Taxonomy</text>
+  <text class="b" x="410" y="260">输入：研究方案　→　输出：<tspan class="mono">taxonomy/concept_skill_taxonomy.json</tspan></text>
+  <rect x="1420" y="184" width="780" height="105" rx="16" fill="#fff" stroke="#5eead4" stroke-width="2"/>
+  <text class="b" x="1450" y="220">MVP 训练范围（每题只训练一个核心能力）</text>
+  <text class="mono" x="1450" y="252">Location / relative_direction　·　Object / topology_relation　·　Network / connectivity</text>
+
+  <!-- B step 1 sources -->
+  <circle cx="365" cy="420" r="27" fill="#2563eb"/><text class="num" x="365" y="429" text-anchor="middle">1</text>
+  <text class="t" x="415" y="410">准备两个互补数据源</text>
+  <g filter="url(#sh)"><rect x="415" y="445" width="780" height="190" rx="18" fill="#eff6ff" stroke="#60a5fa" stroke-width="2"/>
+    <rect x="440" y="465" width="110" height="28" rx="14" fill="#2563eb"/><text class="pill" x="495" y="485" text-anchor="middle">Synthetic</text>
+    <text class="b" x="440" y="530">坐标点对、轴对齐 polygon bbox、无向图 / road-like graph</text>
+    <text class="b" x="440" y="563">控制：坐标范围、拓扑关系、连通/断连、图分支与语言模板</text>
+    <text class="mono" x="440" y="600">generators/direction_generator.py · topology_generator.py · connectivity_generator.py</text>
+  </g>
+  <g filter="url(#sh)"><rect x="1350" y="445" width="850" height="190" rx="18" fill="#fff7ed" stroke="#fb923c" stroke-width="2"/>
+    <rect x="1375" y="465" width="102" height="28" rx="14" fill="#ea580c"/><text class="pill" x="1426" y="485" text-anchor="middle">Real GIS</text>
+    <text class="b" x="1375" y="530">从 POI / AOI / Road / Junction / Network 采样；先完成 CRS 投影与数据许可核查</text>
+    <text class="b" x="1375" y="563">每个真实场景同时产生命名版与匿名版；保存 city、source_license、crs</text>
+    <text class="mono" x="1375" y="600">real_gis.RealGISSampler（业务方实现，不随仓库提供数据）</text>
+  </g>
+
+  <!-- B step 2 truth -->
+  <circle cx="365" cy="700" r="27" fill="#2563eb"/><text class="num" x="365" y="709" text-anchor="middle">2</text>
+  <text class="t" x="415" y="690">程序生成 Gold Answer（LLM 不参与判定真值）</text>
+  <g filter="url(#sh)"><rect x="415" y="730" width="535" height="160" rx="18" fill="#f5f3ff" stroke="#a78bfa" stroke-width="2"/>
+    <text class="t" x="445" y="770">Direction Verifier</text><text class="b" x="445" y="807">A(x₁,y₁), B(x₂,y₂)</text><text class="b" x="445" y="837">dx, dy 的符号 → N / NE / …</text><text class="mono" x="445" y="870">direction_of(a, b)</text>
+  </g>
+  <g filter="url(#sh)"><rect x="1060" y="730" width="535" height="160" rx="18" fill="#fdf2f8" stroke="#f472b6" stroke-width="2"/>
+    <text class="t" x="1090" y="770">Topology Verifier</text><text class="b" x="1090" y="807">bbox / geometry 的内部与边界</text><text class="b" x="1090" y="837">Contains / Within / Touches / Intersects / Disjoint</text><text class="mono" x="1090" y="870">topology_of(a, b)</text>
+  </g>
+  <g filter="url(#sh)"><rect x="1705" y="730" width="495" height="160" rx="18" fill="#ecfdf5" stroke="#34d399" stroke-width="2"/>
+    <text class="t" x="1735" y="770">Connectivity Verifier</text><text class="b" x="1735" y="807">Graph + source + target</text><text class="b" x="1735" y="837">BFS 搜索是否存在合法路径</text><text class="mono" x="1735" y="870">witness_path(edges, s, t)</text>
+  </g>
+  <path class="arrow" d="M805 635 V700 H680 V730"/><path class="arrow" d="M1775 635 V700 H1952 V730"/>
+
+  <!-- B step 3 record + trace -->
+  <circle cx="365" cy="955" r="27" fill="#2563eb"/><text class="num" x="365" y="964" text-anchor="middle">3</text>
+  <text class="t" x="415" y="945">构造训练记录与三套监督版本</text>
+  <g filter="url(#sh)"><rect x="415" y="975" width="1050" height="80" rx="16" fill="#fff" stroke="#94a3b8" stroke-width="2"/>
+    <text class="mono" x="440" y="1007">ConceptExample { task_type, concept, skill, question, gold_answer, source_type, city, anonymous, metadata }</text>
+    <text class="s" x="440" y="1035">元数据保存几何/图结构，供 verifier 在训练与评测时独立重算真值</text>
+  </g>
+  <g filter="url(#sh)"><rect x="1545" y="935" width="655" height="120" rx="16" fill="#fefce8" stroke="#eab308" stroke-width="2"/>
+    <text class="t" x="1570" y="970">同一题派生 3 个训练视图</text>
+    <text class="b" x="1570" y="1002">① QA-only　② Minimal GIS Trace　③ OODA Trace</text>
+    <text class="mono" x="1570" y="1034">reasoning/minimal_trace_builder.py · ooda_builder.py</text>
+  </g>
+
+  <!-- C step 4 partitions -->
+  <circle cx="365" cy="1170" r="27" fill="#047857"/><text class="num" x="365" y="1179" text-anchor="middle">4</text>
+  <text class="t" x="415" y="1160">先切分数据，再训练：避免泄漏</text>
+  <g filter="url(#sh)"><rect x="415" y="1190" width="510" height="140" rx="18" fill="#fff" stroke="#38bdf8" stroke-width="2"/>
+    <text class="t" x="440" y="1230">Train / Valid</text><text class="b" x="440" y="1264">in-domain，原子概念任务</text><text class="b" x="440" y="1294">不包含完整 Spatial CoT workflow</text>
+  </g>
+  <g filter="url(#sh)"><rect x="1040" y="1190" width="510" height="140" rx="18" fill="#fff" stroke="#fb923c" stroke-width="2"/>
+    <text class="t" x="1065" y="1230">Atomic OOD Test</text><text class="b" x="1065" y="1264">anonymous / unseen city / structural / linguistic</text><text class="mono" x="1065" y="1294">evaluation/splits.py</text>
+  </g>
+  <g filter="url(#sh)"><rect x="1665" y="1190" width="535" height="140" rx="18" fill="#fff" stroke="#f43f5e" stroke-width="2"/>
+    <text class="t" x="1690" y="1230">Held-out Workflow Test</text><text class="b" x="1690" y="1264">复杂概念组合，只在最终评测出现</text><text class="b" x="1690" y="1294">防止 workflow 训练污染</text>
+  </g>
+  <path class="dash" d="M940 1055 V1140 H670 V1190"/><path class="dash" d="M940 1055 V1140 H1295 V1190"/><path class="dash" d="M940 1055 V1140 H1933 V1190"/>
+
+  <!-- C step 5 SFT -->
+  <circle cx="365" cy="1400" r="27" fill="#047857"/><text class="num" x="365" y="1409" text-anchor="middle">5</text>
+  <text class="t" x="415" y="1390">Stage A：Supervised Fine-Tuning</text>
+  <g filter="url(#sh)"><rect x="415" y="1420" width="800" height="170" rx="18" fill="#eff6ff" stroke="#60a5fa" stroke-width="2"/>
+    <text class="b" x="445" y="1460">输入：Base LLM + Train JSONL + 指定 trace style（QA / Minimal / OODA）</text>
+    <text class="b" x="445" y="1493">格式：Prompt → Gold Completion；只计算 completion token 的 loss</text>
+    <text class="b" x="445" y="1526">目的：学习“空间变量 → 概念规则 → 答案”，不是学习 workflow</text>
+    <text class="mono" x="445" y="1562">scripts/train_sft.py --schema concept --trace-style {qa|minimal|ooda}</text>
+  </g>
+  <path class="good" d="M820 1330 V1395 H815 V1420"/>
+
+  <!-- C step 6 GRPO detail -->
+  <circle cx="1305" cy="1400" r="27" fill="#047857"/><text class="num" x="1305" y="1409" text-anchor="middle">6</text>
+  <text class="t" x="1355" y="1390">Stage B：GRPO + GIS Verifier</text>
+  <g filter="url(#sh)"><rect x="1355" y="1420" width="845" height="235" rx="18" fill="#ecfdf5" stroke="#10b981" stroke-width="3"/>
+    <text class="b" x="1385" y="1460">① 每个 prompt 采样 G 条 completion（默认 G=4）</text>
+    <text class="b" x="1385" y="1493">② 从 Act / 最后一行解析预测答案</text>
+    <text class="b" x="1385" y="1526">③ 对应 verifier 重算 expected；计算 Answer + GIS + 小权重 Trace/Format reward</text>
+    <text class="b" x="1385" y="1559">④ 组内标准化 reward → advantage；对 completion token 做 policy gradient 更新</text>
+    <text class="mono" x="1385" y="1605">scripts/train_grpo.py --schema concept · training/rewards.py · verifiers/*</text>
+    <text class="note" x="1385" y="1635">关键约束：GIS Verifier 的空间正确性必须高于 OODA 格式奖励</text>
+  </g>
+  <path class="good" d="M1215 1505 H1330"/>
+
+  <!-- D -->
+  <circle cx="365" cy="1810" r="27" fill="#c2410c"/><text class="num" x="365" y="1819" text-anchor="middle">7</text>
+  <text class="t" x="415" y="1800">原子概念评测：先验证是否获得基础能力</text>
+  <g filter="url(#sh)"><rect x="415" y="1830" width="925" height="180" rx="18" fill="#fff" stroke="#fb923c" stroke-width="2"/>
+    <text class="b" x="445" y="1870">对每一题：模型输出 → verifier 重算真值 → 记录 Answer Accuracy / Verifier Accuracy / Trace Validity</text>
+    <text class="b" x="445" y="1903">按 concept、task_type、source、city、anonymous、OOD tag 分桶汇总</text>
+    <text class="mono" x="445" y="1942">evaluation/atomic.py · scripts/evaluate_atomic.py</text>
+    <text class="s" x="445" y="1977">重点：C−A 测试脱离 Spatial CoT prompt 后的概念内化，不把 prompt 效果当作能力。</text>
+  </g>
+  <circle cx="1430" cy="1810" r="27" fill="#c2410c"/><text class="num" x="1430" y="1819" text-anchor="middle">8</text>
+  <text class="t" x="1480" y="1800">组合泛化评测：最后才测试 Spatial CoT</text>
+  <g filter="url(#sh)"><rect x="1480" y="1830" width="720" height="180" rx="18" fill="#fff" stroke="#f43f5e" stroke-width="2"/>
+    <text class="b" x="1510" y="1870">输入未见组合：距离条件 + 方位条件 + 拓扑条件 + 路网条件</text>
+    <text class="b" x="1510" y="1903">对比 2×2：Base / GIS-Concept Model × Direct / Spatial CoT</text>
+    <text class="b" x="1510" y="1936">核心指标：D−B，概念训练是否增强 workflow 组合能力</text>
+    <text class="note" x="1510" y="1977">此类完整 workflow 永不进入原子训练集</text>
+  </g>
+  <path class="good" d="M1775 1655 V1785 H880 V1830"/>
+  <path class="good" d="M1775 1655 V1785 H1840 V1830"/>
+
+  <!-- footer -->
+  <rect x="305" y="2110" width="2050" height="42" rx="18" fill="#e2e8f0"/>
+  <text class="s" x="1330" y="2138" text-anchor="middle">代码主入口：src/gis_concept_llm/　|　配置：configs/　|　Taxonomy：taxonomy/　|　业务动作闭环（兼容层）：src/soda/</text>
+</svg>

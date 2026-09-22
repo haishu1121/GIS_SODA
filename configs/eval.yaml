@@ -1,0 +1,3 @@
+splits: [in_domain, anonymous, unseen_city, structural_ood, linguistic_ood]
+metrics: [answer_accuracy, verifier_accuracy, trace_validity]
+workflow_evaluation: held_out_only

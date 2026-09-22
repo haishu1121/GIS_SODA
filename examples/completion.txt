@@ -1,0 +1,4 @@
+Observe: Forklift-7 is at [2, 3]; [2, 5] is blocked.
+Orient: The target cell [2, 4] is in bounds and unblocked.
+Decide: Move the forklift one safe cell east.
+Act: {"operation":"move","entity_id":"forklift-7","target":[2,4]}

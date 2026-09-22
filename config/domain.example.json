@@ -1,0 +1,12 @@
+{
+  "name": "warehouse-grid-example",
+  "state_description": "Move one approved vehicle at a time. Never enter a blocked cell or leave the warehouse.",
+  "bounds": [10, 12],
+  "blocked_key": "obstacles",
+  "goal_key": "goal",
+  "actions": {
+    "move": {"required_fields": ["entity_id", "target"]},
+    "pickup": {"required_fields": ["entity_id", "item_id"]},
+    "dropoff": {"required_fields": ["entity_id", "item_id", "target"]}
+  }
+}

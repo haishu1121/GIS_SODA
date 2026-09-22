@@ -1,0 +1,5 @@
+model: Qwen/Qwen2.5-0.5B-Instruct
+epochs: 3
+learning_rate: 2.0e-5
+trace_variants: [qa, minimal, ooda]
+train_scope: atomic_concepts_only

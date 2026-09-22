@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1240" viewBox="0 0 1800 1240" role="img" aria-labelledby="title desc">
+  <title id="title">GIS Concept LLM Pipeline</title>
+  <desc id="desc">基于原子 GIS 概念、GIS Verifier 和 OOD 评测的训练与验证流程图</desc>
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font: 700 44px 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif; fill: #0f172a; }
+      .subtitle { font: 22px 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif; fill: #475569; }
+      .stage { font: 700 22px 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif; fill: #334155; letter-spacing: 1px; }
+      .box-title { font: 700 26px 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif; fill: #0f172a; }
+      .box-text { font: 20px 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif; fill: #334155; }
+      .small { font: 17px 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif; fill: #475569; }
+      .pill { font: 700 18px 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif; fill: #ffffff; }
+      .arrow { fill: none; stroke: #64748b; stroke-width: 4; marker-end: url(#arrowhead); }
+      .arrow-good { fill: none; stroke: #0f766e; stroke-width: 5; marker-end: url(#arrowhead-good); }
+      .dash { fill: none; stroke: #94a3b8; stroke-width: 3; stroke-dasharray: 10 8; }
+    </style>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#334155" flood-opacity=".12"/></filter>
+    <marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#64748b"/></marker>
+    <marker id="arrowhead-good" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#0f766e"/></marker>
+    <linearGradient id="header" x1="0" x2="1"><stop stop-color="#0f766e"/><stop offset="1" stop-color="#2563eb"/></linearGradient>
+  </defs>
+
+  <rect class="bg" width="1800" height="1240"/>
+  <rect x="0" y="0" width="1800" height="126" fill="url(#header)"/>
+  <text class="title" x="900" y="61" text-anchor="middle" fill="#ffffff">基础空间 / GIS 概念内化训练与评测 Pipeline</text>
+  <text class="subtitle" x="900" y="101" text-anchor="middle" fill="#dbeafe">Atomic Concepts → Verifiable Training → OOD Generalization → Compositional GIS Reasoning</text>
+
+  <!-- stage labels -->
+  <text class="stage" x="85" y="178">01  概念定义与数据 Grounding</text>
+  <text class="stage" x="85" y="445">02  原子任务、真值与 Reasoning Supervision</text>
+  <text class="stage" x="85" y="735">03  两阶段训练：SFT → GRPO + GIS Verifier</text>
+  <text class="stage" x="85" y="1005">04  泛化与组合能力评测</text>
+
+  <!-- row 1 -->
+  <g filter="url(#shadow)">
+    <rect x="90" y="205" width="420" height="175" rx="22" fill="#e0f2fe" stroke="#38bdf8" stroke-width="2"/>
+    <rect x="115" y="228" width="122" height="34" rx="17" fill="#0284c7"/><text class="pill" x="176" y="252" text-anchor="middle">Taxonomy</text>
+    <text class="box-title" x="115" y="300">Concept–Skill Taxonomy</text>
+    <text class="box-text" x="115" y="336">Location → Direction</text>
+    <text class="box-text" x="115" y="366">Object → Topology　|　Network → Connectivity</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="690" y="205" width="420" height="175" rx="22" fill="#f0fdf4" stroke="#34d399" stroke-width="2"/>
+    <rect x="715" y="228" width="130" height="34" rx="17" fill="#059669"/><text class="pill" x="780" y="252" text-anchor="middle">Synthetic</text>
+    <text class="box-title" x="715" y="300">可控合成空间数据</text>
+    <text class="box-text" x="715" y="336">坐标 · 矩形 Geometry · 图结构</text>
+    <text class="box-text" x="715" y="366">控制难度、表达与结构分布</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1290" y="205" width="420" height="175" rx="22" fill="#fff7ed" stroke="#fb923c" stroke-width="2"/>
+    <rect x="1315" y="228" width="128" height="34" rx="17" fill="#ea580c"/><text class="pill" x="1379" y="252" text-anchor="middle">Real GIS</text>
+    <text class="box-title" x="1315" y="300">真实 GIS Grounding</text>
+    <text class="box-text" x="1315" y="336">POI · AOI · Road · Junction · Network</text>
+    <text class="box-text" x="1315" y="366">命名版 + 匿名版；记录 CRS 与来源</text>
+  </g>
+  <path class="arrow" d="M510 292 H665"/><path class="arrow" d="M1110 292 H1265"/>
+
+  <!-- row 2 -->
+  <g filter="url(#shadow)">
+    <rect x="90" y="475" width="470" height="190" rx="22" fill="#f5f3ff" stroke="#8b5cf6" stroke-width="2"/>
+    <rect x="115" y="498" width="142" height="34" rx="17" fill="#7c3aed"/><text class="pill" x="186" y="522" text-anchor="middle">Atomic Tasks</text>
+    <text class="box-title" x="115" y="570">一题一个核心能力</text>
+    <text class="box-text" x="115" y="608">Direction：坐标差 → 方位</text>
+    <text class="box-text" x="115" y="636">Topology：边界/内部 → 关系</text>
+    <text class="box-text" x="115" y="664">Connectivity：图结构 → 是否存在路径</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="665" y="475" width="470" height="190" rx="22" fill="#ecfeff" stroke="#06b6d4" stroke-width="2"/>
+    <rect x="690" y="498" width="142" height="34" rx="17" fill="#0891b2"/><text class="pill" x="761" y="522" text-anchor="middle">Gold Labels</text>
+    <text class="box-title" x="690" y="570">程序生成空间真值</text>
+    <text class="box-text" x="690" y="608">坐标规则 · Geometry 计算 · 图搜索</text>
+    <text class="box-text" x="690" y="636">LLM 不决定答案，只负责语言表达</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1240" y="475" width="470" height="190" rx="22" fill="#fefce8" stroke="#eab308" stroke-width="2"/>
+    <rect x="1265" y="498" width="164" height="34" rx="17" fill="#ca8a04"/><text class="pill" x="1347" y="522" text-anchor="middle">Trace Variants</text>
+    <text class="box-title" x="1265" y="570">三种监督形式</text>
+    <text class="box-text" x="1265" y="608">QA-only　|　Minimal GIS Trace　|　OODA</text>
+    <text class="box-text" x="1265" y="636">比较“规则内化”而非格式记忆</text>
+  </g>
+  <path class="arrow" d="M325 380 V450 H325 V475"/>
+  <path class="arrow" d="M900 380 V450 H900 V475"/>
+  <path class="arrow" d="M1500 380 V450 H1500 V475"/>
+  <path class="arrow" d="M560 570 H640"/><path class="arrow" d="M1135 570 H1215"/>
+
+  <!-- row 3 -->
+  <g filter="url(#shadow)">
+    <rect x="210" y="770" width="435" height="165" rx="22" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+    <rect x="235" y="793" width="70" height="34" rx="17" fill="#2563eb"/><text class="pill" x="270" y="817" text-anchor="middle">SFT</text>
+    <text class="box-title" x="235" y="862">GIS Concept SFT Model</text>
+    <text class="box-text" x="235" y="900">重复学习原子空间规律与推理模式</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="805" y="750" width="510" height="205" rx="22" fill="#ecfdf5" stroke="#10b981" stroke-width="3"/>
+    <rect x="830" y="773" width="78" height="34" rx="17" fill="#047857"/><text class="pill" x="869" y="797" text-anchor="middle">GRPO</text>
+    <text class="box-title" x="830" y="842">GIS-Concept RL Model</text>
+    <text class="box-text" x="830" y="878">同题多候选 → 组内相对优势值</text>
+    <text class="box-text" x="830" y="910">R = Answer + λ₁ GIS Verifier + λ₂ Reasoning</text>
+    <text class="small" x="830" y="937">空间正确性奖励 ＞ OODA 格式奖励</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1430" y="770" width="280" height="165" rx="22" fill="#fff1f2" stroke="#fb7185" stroke-width="2"/>
+    <rect x="1455" y="793" width="132" height="34" rx="17" fill="#e11d48"/><text class="pill" x="1521" y="817" text-anchor="middle">GIS Verifier</text>
+    <text class="box-title" x="1455" y="862">可执行真值校验</text>
+    <text class="box-text" x="1455" y="900">Direction / Topology / Connectivity</text>
+  </g>
+  <path class="arrow-good" d="M975 665 V730 H427 V770"/>
+  <path class="arrow-good" d="M645 852 H780"/>
+  <path class="arrow-good" d="M1315 852 H1405"/>
+  <path class="dash" d="M1570 770 V710 H1060 V750"/>
+  <text class="small" x="1285" y="704" text-anchor="middle">重新计算空间真值并返回 reward</text>
+
+  <!-- row 4 -->
+  <g filter="url(#shadow)">
+    <rect x="90" y="1040" width="670" height="145" rx="22" fill="#f0fdfa" stroke="#14b8a6" stroke-width="2"/>
+    <rect x="115" y="1063" width="185" height="34" rx="17" fill="#0f766e"/><text class="pill" x="207" y="1087" text-anchor="middle">Atomic OOD Benchmark</text>
+    <text class="box-title" x="115" y="1132">基础概念泛化</text>
+    <text class="box-text" x="355" y="1132">In-domain · Anonymous · Unseen City · Structural OOD · Linguistic OOD</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1040" y="1040" width="670" height="145" rx="22" fill="#fff7ed" stroke="#f97316" stroke-width="2"/>
+    <rect x="1065" y="1063" width="205" height="34" rx="17" fill="#c2410c"/><text class="pill" x="1168" y="1087" text-anchor="middle">Held-out Spatial CoT</text>
+    <text class="box-title" x="1065" y="1132">组合泛化 Workflow 测试</text>
+    <text class="box-text" x="1065" y="1163">Distance + Direction + Topology + Network 的未见组合</text>
+  </g>
+  <path class="arrow-good" d="M1060 955 V1015 H425 V1040"/>
+  <path class="arrow-good" d="M1060 955 V1015 H1375 V1040"/>
+</svg>
